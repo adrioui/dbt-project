@@ -1,0 +1,58 @@
+version: 2
+
+sources:
+  - name: jaffle_shop
+    description: A clone of a Postgres application database.
+    database: raw
+    schema: jaffle_shop
+
+    tables:
+      - name: customers
+        description: Raw customers data.
+        columns:
+          - name: id
+            description: Primary key for customers.
+            tests:
+              - unique
+              - not_null
+          - name: first_name
+            description: First name of the customers.
+          - name: last_name
+            description: Last name of the customers.
+
+      - name: orders
+        description: Raw orders data.
+        loaded_at_field: _etl_loaded_at
+        freshness:
+          warn_after:
+            count: 1
+            period: day
+          error_after:
+            count: 3
+            period: day
+        columns:
+          - name: id
+            description: Primary key for orders.
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: Foreign key to raw.customers.id
+            tests:
+              - relationships:
+                  field: id
+                  to: ref('customers')
+          - name: status
+            description: '{{ doc("order_status") }}'
+            tests:
+              - accepted_values:
+                  values:
+                    - completed
+                    - shipped
+                    - returned
+                    - return_pending
+                    - placed
+          - name: order_date
+            description: When the customers ordered.
+
+
